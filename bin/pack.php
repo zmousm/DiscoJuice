@@ -29,6 +29,7 @@ $configraw = file_get_contents($basename . '/etc/config.js');
 $config = json_decode($configraw, true);
 
 
+date_default_timezone_set((isset($config['timezone']) ? $config['timezone'] : "UTC"));
 
 $version = $config['version'];
 // if (count($argv) >= 2) $version = $argv[1];
