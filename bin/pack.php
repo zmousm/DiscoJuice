@@ -15,7 +15,7 @@ function packJS($data) {
 	    array(
 	        'method'  => 'POST',
 	        'header'  => 'Content-type: application/x-www-form-urlencoded',
-	        'content' => http_build_query($postdata)
+		'content' => preg_replace('/%5B(?:[0-9]|[1-9][0-9]+)%5D=/', '=', http_build_query($postdata))
 	    )
 	);
 	$context  = stream_context_create($opts);
