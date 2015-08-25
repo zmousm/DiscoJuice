@@ -1,21 +1,21 @@
 #!/usr/bin/env php
 <?php
 
-function packJS($data) {
+function packJSapi($data, $input_file) {
 	$postdata = array(
-		'js_code' => $data,
-		'compilation_level' => 'SIMPLE_OPTIMIZATIONS',
 		'output_info' => 'compiled_code',
 		//'output_info' => 'errors',
 		'warning_level' => 'VERBOSE',
 		'output_format' => 'text',
+		'compilation_level' => 'SIMPLE_OPTIMIZATIONS',
+		'js_code' => is_string($input_file) ? file_get_contents($input_file) : $data,
 	);
 
 	$opts = array('http' =>
 	    array(
 	        'method'  => 'POST',
 	        'header'  => 'Content-type: application/x-www-form-urlencoded',
-	        'content' => http_build_query($postdata)
+		'content' => preg_replace('/%5B(?:[0-9]|[1-9][0-9]+)%5D=/', '=', http_build_query($postdata))
 	    )
 	);
 	$context  = stream_context_create($opts);
@@ -24,11 +24,53 @@ function packJS($data) {
 	return $compressed;
 }
 
+function packJScompiler($data, $input_file = null) {
+  global $basename;
+  if (is_string($input_file)) {
+    $stderr = dirname($input_file) . '/stderr.log';
+  } else {
+    $stderr = $basename . '/stderr.log';
+  }
+  $descriptorspec = array(
+			  0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
+			  1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+			  2 => array("file", $stderr, "a") // stderr is a file to write to
+			  );
+  $opts = array(
+		'--compilation_level', 'SIMPLE',
+		'--warning_level', 'DEFAULT',
+		);
+  if (is_string($input_file)) {
+    $opts = array_merge($opts, array('--js', $input_file));
+    $descriptorspec[0] = array("file", "/dev/null", "r");
+  }
+  $cmdline = array_merge(explode(' ', "java -jar $basename/compiler.jar"), $opts);
+  file_put_contents($stderr, implode(' ', array_merge($cmdline, array("\n\n"))), FILE_APPEND);
+  $process = proc_open(implode(' ', $cmdline), $descriptorspec, $pipes);
+  if (is_resource($process)) {
+    if (!is_string($input_file)) {
+      fwrite($pipes[0], $data);
+      fclose($pipes[0]);
+    }
+    $compressed = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $return_value = proc_close($process);
+  }
+  return $compressed;
+}
+function packJS($data, $filename) {
+  $closure_input_filename = preg_replace("#\.min#", "", $filename);
+  file_put_contents($closure_input_filename, $data);
+  return call_user_func('packJS' . (CLOSURE_SERVICE ? 'api' : 'compiler'), null, $closure_input_filename);
+}
+
 $basename = dirname(dirname(__FILE__));
 $configraw = file_get_contents($basename . '/etc/config.js');
 $config = json_decode($configraw, true);
 
 
+define("CLOSURE_SERVICE", (isset($config['closure_service']) ? (bool) $config['closure_service'] : true));
+date_default_timezone_set((isset($config['timezone']) ? $config['timezone'] : "UTC"));
 
 $version = $config['version'];
 // if (count($argv) >= 2) $version = $argv[1];
@@ -58,8 +100,8 @@ $langmeta = json_decode(file_get_contents($sourcebase . 'languages.json'), TRUE)
 foreach($langmeta AS $lang) {
 	
 	$ldata = $data . file_get_contents($sourcebase . 'discojuice.dict.' . $lang . '.js');
-	$compressed = packJS($ldata);
 	$filename = $basename . '/builds/discojuice-' .  $version . '.' . $lang . '.min.js';
+	$compressed = packJS($ldata, $filename);
 	echo "Packing " . $filename . "\n";
 	file_put_contents($filename, $compressed);
 }
@@ -67,8 +109,8 @@ foreach($langmeta AS $lang) {
 
 $ldata = file_get_contents($sourcebase . 'idpdiscovery.js');
 // echo $ldata;
-$compressed = packJS($ldata);
 $filename = $basename . '/builds/idpdiscovery-' .  $version . '.min.js';
+$compressed = packJS($ldata, $filename);
 echo "Packing " . $filename . "\n";
 file_put_contents($filename, $compressed);
 

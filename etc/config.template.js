@@ -6,5 +6,7 @@
 		"stable": "3.0",
 		"dev": "3.0"
 	},
-	"transifex-credentials": "erlang:xxxxx"
+	"transifex-credentials": "erlang:xxxxx",
+	"timezone": "Continent/City",
+	"closure_service": true
 }
