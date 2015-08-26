@@ -24,7 +24,13 @@ DiscoJuice.UI = {
 	"show": function() {
 		this.control.load();
 	
-		this.popup.fadeIn("slow");
+		// no fade effect in non-overlay mode
+		if (this.parent.Utils.options.get('always', false) === true &&
+		    this.parent.Utils.options.get('overlay', true) === false) {
+		    this.popup.fadeIn(0);
+		} else {
+		    this.popup.fadeIn("slow");
+		}
 		$("div#discojuice_overlay").show(); // fadeIn("fast");
 		this.focusSearch();
 	},
@@ -34,8 +40,15 @@ DiscoJuice.UI = {
 	},
 	
 	"hide": function() {
-		$("div#discojuice_overlay").fadeOut("slow"); //fadeOut("fast");
-		this.popup.fadeOut("slow");
+		// no fade effect in non-overlay mode
+		if (this.parent.Utils.options.get('always', false) === true &&
+		    this.parent.Utils.options.get('overlay', true) === false) {
+		    $("div#discojuice_overlay").fadeOut(0);
+		    this.popup.fadeOut(0);
+		} else {
+		    $("div#discojuice_overlay").fadeOut("slow"); //fadeOut("fast");
+		    this.popup.fadeOut("slow");
+		}
 	},
 	
 	"clearItems": function() {

@@ -850,8 +850,14 @@ DiscoJuice.Control = {
 				return;
 		    }
 		    if(charCode == 27) {
+			// Pressing esc should not hide dj in non-overlay mode
+			if (this.parent.Utils.options.get('always', false) === true &&
+			    this.parent.Utils.options.get('overlay', true) === false) {
+				void(0);
+			} else {
 				that.ui.hide();
-				return;
+			}
+			return;
 		    }
 			
 			performSearch.ping(event);
