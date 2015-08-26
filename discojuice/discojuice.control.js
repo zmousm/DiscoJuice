@@ -954,22 +954,39 @@ DiscoJuice.Control = {
 							url: countryapi,
 							dataType: 'jsonp',
 							jsonpCallback: function() { return 'dj_country'; },
-							success: function(data) {
-								if (data && data.status == 'ok' && data.country) {
+							success: function(data, txtstatus) {
+								var status, country, lon, lat, errorstr;
+								if (data && 'status' in data) {
+									status = data.status == 'ok';
+								} else {
+									status = txtstatus == 'success';
+								}
+								if (data && 'geo' in data && data.geo) {
+									country = data.country;
+									lon = data.geo.lon;
+									lat = data.geo.lat;
+								} else if (data && 'country_code' in data && data.country_code) {
+									country = data.country_code;
+									lon = data.longitude;
+									lat = data.latitude;
+								}
+								errorstr = data.error || null;
 
-									that.parent.Utils.createCookie(data.country, 'Country2');
-									that.setCountry(data.country, false);
-									that.parent.Utils.log('DiscoJuice getCountry() : Country lookup succeeded: ' + data.country);
+								if (status && country) {
 
-									if (data.geo && data.geo.lat && data.geo.lon) {
-										that.setPosition(data.geo.lat, data.geo.lon, false);
-										that.parent.Utils.createCookie(data.geo.lat, 'GeoLat');
-										that.parent.Utils.createCookie(data.geo.lon, 'GeoLon');
+									that.parent.Utils.createCookie(country, 'Country2');
+									that.setCountry(country, false);
+									that.parent.Utils.log('DiscoJuice getCountry() : Country lookup succeeded: ' + country);
+
+									if (lat && lon) {
+										that.setPosition(lat, lon, false);
+										that.parent.Utils.createCookie(lat, 'GeoLat');
+										that.parent.Utils.createCookie(lon, 'GeoLon');
 									} 
 
-								} else if (data && data.error){
-									that.parent.Utils.log('DiscoJuice getCountry() : Country lookup failed: ' + (data.error || ''));
-									that.ui.error("Error looking up users localization by country: " + (data.error || ''));
+								} else if (!status && errorstr){
+									that.parent.Utils.log('DiscoJuice getCountry() : Country lookup failed: ' + errorstr);
+									that.ui.error("Error looking up users localization by country: " + errorstr);
 								} else {
 									that.parent.Utils.log('DiscoJuice getCountry() : Country lookup failed');
 									that.ui.error("Error looking up users localization by country.");
