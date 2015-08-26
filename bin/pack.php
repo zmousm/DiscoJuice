@@ -43,6 +43,17 @@ function packJScompiler($data, $input_file = null, $dst_file = null) {
   if (is_string($input_file)) {
     $opts = array_merge($opts, array('--js', $input_file));
     $descriptorspec[0] = array("file", "/dev/null", "r");
+    if (is_string($dst_file)) {
+      $srcmap_file = preg_replace("#\.js$#", ".map", $dst_file);
+      $opts = array_merge($opts, array('--js_output_file', $dst_file,
+				       '--create_source_map', $srcmap_file,
+				       '--source_map_location_mapping',
+				       '\''. dirname($input_file) .'/|\'',
+				       '--output_wrapper',
+				       "'%output%\n//# sourceMappingURL=".basename($srcmap_file)."'"
+				       )
+			  );
+    }
   }
   $cmdline = array_merge(explode(' ', "java -jar $basename/compiler.jar"), $opts);
   file_put_contents($stderr, implode(' ', array_merge($cmdline, array("\n\n"))), FILE_APPEND);
