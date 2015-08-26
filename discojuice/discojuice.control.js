@@ -826,9 +826,9 @@ DiscoJuice.Control = {
 		    }
 		    if(charCode == 27) {
 			// Pressing esc should not hide dj in non-overlay mode
-			if (this.parent.Utils.options.get('always', false) === true &&
-			    this.parent.Utils.options.get('overlay', true) === false) {
-				void(0);
+			if (that.parent.Utils.options.get('always', false) === true &&
+			    that.parent.Utils.options.get('overlay', true) === false) {
+				;
 			} else {
 				that.ui.hide();
 			}
