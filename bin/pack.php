@@ -24,7 +24,7 @@ function packJSapi($data, $input_file) {
 	return $compressed;
 }
 
-function packJScompiler($data, $input_file = null) {
+function packJScompiler($data, $input_file = null, $dst_file = null) {
   global $basename;
   if (is_string($input_file)) {
     $stderr = dirname($input_file) . '/stderr.log';
@@ -52,8 +52,12 @@ function packJScompiler($data, $input_file = null) {
       fwrite($pipes[0], $data);
       fclose($pipes[0]);
     }
-    $compressed = stream_get_contents($pipes[1]);
-    fclose($pipes[1]);
+    if (!is_string($dst_file)) {
+      $compressed = stream_get_contents($pipes[1]);
+      fclose($pipes[1]);
+    } else {
+      $compressed = $dst_file;
+    }
     $return_value = proc_close($process);
   }
   return $compressed;
@@ -61,7 +65,10 @@ function packJScompiler($data, $input_file = null) {
 function packJS($data, $filename) {
   $closure_input_filename = preg_replace("#\.min#", "", $filename);
   file_put_contents($closure_input_filename, $data);
-  return call_user_func('packJS' . (CLOSURE_SERVICE ? 'api' : 'compiler'), null, $closure_input_filename);
+  return call_user_func('packJS' . (CLOSURE_SERVICE ? 'api' : 'compiler'),
+			null,
+			$closure_input_filename,
+			(CLOSURE_SERVICE ? null : $filename));
 }
 
 $basename = dirname(dirname(__FILE__));
@@ -101,17 +108,20 @@ foreach($langmeta AS $lang) {
 	
 	$ldata = $data . file_get_contents($sourcebase . 'discojuice.dict.' . $lang . '.js');
 	$filename = $basename . '/builds/discojuice-' .  $version . '.' . $lang . '.min.js';
-	$compressed = packJS($ldata, $filename);
 	echo "Packing " . $filename . "\n";
-	file_put_contents($filename, $compressed);
+	$compressed = packJS($ldata, $filename);
+	if ($compressed != $filename) {
+	  file_put_contents($filename, $compressed);
+	}
 }
 
 
 $ldata = file_get_contents($sourcebase . 'idpdiscovery.js');
 // echo $ldata;
 $filename = $basename . '/builds/idpdiscovery-' .  $version . '.min.js';
-$compressed = packJS($ldata, $filename);
 echo "Packing " . $filename . "\n";
-file_put_contents($filename, $compressed);
-
+$compressed = packJS($ldata, $filename);
+if ($compressed != $filename) {
+  file_put_contents($filename, $compressed);
+}
 
