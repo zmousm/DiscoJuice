@@ -376,13 +376,13 @@
     this.setBackgroundColor(params.backgroundColor);
 
     this.width = params.container.width();
-    this.height = params.container.height();
+    this.height = this.realHeight();
 
     this.resize();
 
     jQuery(window).resize(function () {
       map.width = params.container.width();
-      map.height = params.container.height();
+      map.height = map.realHeight();
       map.resize();
       map.canvas.setSize(map.width, map.height);
       map.applyTransform();
@@ -670,6 +670,16 @@
 
     isSelected: function(cc) {
       return this.selectedRegions.indexOf(cc) >= 0;
+    },
+
+    // A responsive container may return 0 < height() < 1, which hinders
+    // scale/transform (re-)calculations; in such a cae, we naively fall
+    // back to innerHeight(), which should return something more realistic.
+    realHeight: function() {
+      var container = this.container;
+      return container.height() < 1 ?
+        container.innerHeight() :
+        container.height();
     },
 
     resize: function () {
