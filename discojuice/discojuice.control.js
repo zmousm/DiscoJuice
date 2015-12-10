@@ -1050,7 +1050,7 @@ DiscoJuice.Control = {
 	"mapSetup": function () {
 		var that = this;
 
-		this.ui.popup.prepend('<div class="map"></div>');
+		this.ui.popup.prepend('<div class="map discojuice_jqvmap"></div>');
 
 		var mapTitle = this.parent.Utils.options.get('mapTitle', this.mapTitle);
 		var mapSubtitle = this.parent.Utils.options.get('mapSubtitle', this.mapSubtitle);
@@ -1064,7 +1064,7 @@ DiscoJuice.Control = {
 
 		this.ui.popup.find('.map').html('<div class="vmap" style="width: 100%; height:' + mapHeight + '"></div>');
 
-		var mtext ='<div class="top">' +
+		var mtext ='<div class="top discojuice_jqvmap">' +
 			'<p class="discojuice_maintitle">' + mapTitle  +  '</p>' +
 			'<p class="discojuice_subtitle">'+ mapSubtitle + '</p>'+
 			'</div>' ;
