@@ -678,6 +678,9 @@ DiscoJuice.Utils = {
 				}
 			}
 		}
+                if (item.entityID &&
+                    unescape(item.entityID).toLowerCase().
+                    search(term.toLowerCase()) !== -1) return true;
 		return false;
 	},
 
